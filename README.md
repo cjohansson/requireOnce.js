@@ -5,7 +5,7 @@ Javascript library for on-demand loading of javascripts, stylesheets and markup.
 Based on the Ensure library but rewritten and increased compatability with modern devices and browsers.
 Tested on IE6, IE7, IE8, IE9, Safari, Chrome, Firefox, Opera.
 
-Just include the script and use:
+Just include the script 'requireOnce.js' and it's ready to use.
 
 // Require file 'css/my-style.css' once
 
