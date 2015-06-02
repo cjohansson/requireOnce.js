@@ -49,8 +49,8 @@
     {
         // Is not jQuery, Sys or Prototype defined?
         if (typeof(jQuery) == 'undefined'
-           && typeof(Sys) == 'undefined'
-           && typeof(Prototype) == 'undefined'
+            && typeof(Sys) == 'undefined'
+            && typeof(Prototype) == 'undefined'
         ) {
             return alert('jQuery, Microsoft ASP.NET AJAX or Prototype library not found. One must be present for requireOnce to work');
         }
@@ -74,7 +74,7 @@
                     // If there's no such Javascript variable and there's no such DOM element with ID then
                     // the test fails. If any exists, then test succeeds
                     return !(eval('typeof ' + data.test) == 'undefined'
-                        && document.getElementById(data.test) == null);
+                    && document.getElementById(data.test) == null);
                 }
 
             } else if (typeof(data.test) == 'function') {
@@ -90,23 +90,26 @@
                 || test() == null
             ) {
 
-                new requireOnceExecutor(data, callback, scope);
+                new RequireOnceExecutor(data, callback, scope);
 
-            // Otherwise - Test succeeded! Just fire the callback
+                // Otherwise - Test succeeded! Just fire the callback
             } else {
 
                 callback();
 
             }
 
-        // Otherwise - no test specified
+            // Otherwise - no test specified
         } else {
 
             // No test specified. So, load necessary javascript/html/css and execute the callback
-            new requireOnceExecutor(data, callback, scope);
+            new RequireOnceExecutor(data, callback, scope);
 
         }
-    }
+
+        return null;
+
+    };
 
     /**
      * Require Once Executor
@@ -117,15 +120,13 @@
      * @param {Function} callback
      * @param {Object|Null} scope
      */
-    window.requireOnceExecutor = function(data, callback, scope)
+    window.RequireOnceExecutor = function(data, callback, scope)
     {
 
         this.data = this.clone(data);
 
         this.callback = (typeof(scope) == 'undefined'
-            || null == scope ? callback : this.delegate(callback, scope));
-
-        this.loadStack = [];
+        || null == scope ? callback : this.delegate(callback, scope));
 
         if (data.js
             && data.js.constructor != Array
@@ -160,12 +161,12 @@
         this.init();
         this.load();
 
-    }
+    };
 
     /**
      * Require Once Executor Prototype
      */
-    window.requireOnceExecutor.prototype =
+    window.RequireOnceExecutor.prototype =
     {
         /**
          * Init
@@ -178,19 +179,19 @@
                 this.getJS = HttpLibrary.loadJavascript_jQuery;
                 this.httpGet = HttpLibrary.httpGet_jQuery;
 
-            // Otherwise - is Prototype available?
+                // Otherwise - is Prototype available?
             } else if (typeof(Prototype) != 'undefined') {
 
                 this.getJS = HttpLibrary.loadJavascript_Prototype;
                 this.httpGet = HttpLibrary.httpGet_Prototype;
 
-            // Otherwise - is Sys available?
+                // Otherwise - is Sys available?
             } else if (typeof(Sys) != 'undefined') {
 
                 this.getJS = HttpLibrary.loadJavascript_MSAJAX;
                 this.httpGet = HttpLibrary.httpGet_MSAJAX;
 
-            // Otherwise - no javascript framework found
+                // Otherwise - no javascript framework found
             } else {
 
                 throw 'jQuery, Prototype or MS AJAX framework not found';
@@ -260,7 +261,7 @@
 
                     this.getJS({
                         url: href,
-                        success: this.delegate(function(content)
+                        success: this.delegate(function()
                         {
                             if (!HttpLibrary.isUrlLoaded(href)) {
                                 scriptsToLoad--;
@@ -287,6 +288,8 @@
                 })
             });
 
+            return null;
+
         },
         loadCSS : function(complete)
         {
@@ -298,12 +301,12 @@
             var head = HttpLibrary.getHead();
             this.forEach(this.data.css, function(href)
             {
-                if( HttpLibrary.isUrlLoaded(href) || this.isTagLoaded('link', 'href', href) )
-                {
+                if (HttpLibrary.isUrlLoaded(href)
+                    || this.isTagLoaded('link', 'href', href)
+                ) {
                     // Do nothing
-                }
-                else
-                {
+                } else {
+
                     var self = this;
                     try
                     {
@@ -324,10 +327,13 @@
                             self.data.error(href, e.message);
                         }
                     }
+
                 }
             });
 
             complete();
+
+            return null;
         },
 
         /**
@@ -346,12 +352,9 @@
 
             this.forEach(this.data.html, function(href)
             {
-                if( HttpLibrary.isUrlLoaded(href) )
-                {
+                if (HttpLibrary.isUrlLoaded(href)) {
                     htmlToDownload --;
-                }
-                else
-                {
+                } else {
                     this.httpGet({
                         url:        href,
                         success:    this.delegate(function(content)
@@ -360,8 +363,12 @@
                             HttpLibrary.registerUrl(href);
 
                             var parent = (this.data.parent || document.body.appendChild(document.createElement("div")));
-                            if( typeof parent == "string" ) parent = document.getElementById(parent);
+                            if (typeof(parent) == 'string') {
+                                parent = document.getElementById(parent);
+                            }
+
                             parent.innerHTML = content;
+
                         }),
                         error:      this.delegate(function(msg)
                         {
@@ -381,6 +388,9 @@
                     complete();
                 })
             });
+
+            return null;
+
         },
 
         /**
@@ -391,25 +401,27 @@
         clone : function(obj)
         {
             var cloned = {};
-            for( var p in obj )
+            for (var p in obj)
             {
-                var x = obj[p];
+                if (obj.hasOwnProperty(p)) {
 
-                if( typeof x == "object" )
-                {
-                    if( x.constructor == Array )
-                    {
-                        var a = [];
-                        for( var i = 0; i < x.length; i ++ ) a.push(x[i]);
-                        cloned[p] = a;
+                    var x = obj[p];
+
+                    if (typeof(x) == 'object') {
+
+                        if (x.constructor == Array) {
+                            var a = [];
+                            for( var i = 0; i < x.length; i ++ ) a.push(x[i]);
+                            cloned[p] = a;
+
+                        } else {
+                            cloned[p] = this.clone(x);
+                        }
+                    } else {
+                        cloned[p] = x;
                     }
-                    else
-                    {
-                        cloned[p] = this.clone(x);
-                    }
+
                 }
-                else
-                    cloned[p] = x;
             }
 
             return cloned;
@@ -418,7 +430,7 @@
         /**
          * For Each
          *
-         * @param {Array} arr
+         * @param {NodeList} arr
          * @param {Function} callback
          */
         forEach: function(arr, callback)
@@ -432,7 +444,7 @@
          * Delegate
          *
          * @param {Function} func
-         * @param {Object} obj
+         * @param {Object|Null} [obj = Null]
          */
         delegate: function(func, obj)
         {
@@ -447,8 +459,11 @@
          */
         until: function(o /* o = { test: function(){...}, delay:100, callback: function(){...} } */)
         {
-            if( o.test() === true ) o.callback();
-            else window.setTimeout( this.delegate( function() { this.until(o); } ), o.delay || 50);
+            if (o.test() === true) {
+                o.callback();
+            } else {
+                window.setTimeout( this.delegate( function() { this.until(o); } ), o.delay || 50);
+            }
         },
 
         /**
@@ -468,11 +483,14 @@
             var tags = document.getElementsByTagName(tagName);
             this.forEach(tags, function(t)
             {
-                if( tag[attName] === t[attName] ) { tagFound = true; return false }
+                if (tag[attName] === t[attName]) {
+                    tagFound = true;
+                }
+                return false;
             });
             return tagFound;
         }
-    }
+    };
 
     /**
      * User-Agent
@@ -523,16 +541,6 @@
             return HttpLibrary.loadedUrls[url] === true;
         },
 
-        /**
-         * Un-Register Url
-         *
-         * @param {String} url
-         */
-        unregisterUrl : function(url)
-        {
-            HttpLibrary.loadedUrls[url] = false;
-        },
-
         /***
          * Register-Url
          *
@@ -558,9 +566,6 @@
             script.type = 'text/javascript';
             script.async = true;
             script.charset = 'utf-8';
-
-            // Set flag loading is not done yet
-            var done = false;
 
             // Is attachEvent function available?
             if (script.attachEvent
@@ -592,7 +597,7 @@
                     error(data.url + ' failed to load');
                 };
 
-            // Otherwise - use eventListeners instead
+                // Otherwise - use eventListeners instead
             } else {
 
                 /**
@@ -606,7 +611,7 @@
                 /**
                  * When Script Causes Error..
                  */
-                script.addEventListener('error', function(event)
+                script.addEventListener('error', function()
                 {
                     error(data.url + ' failed to load');
                 }, false);
@@ -628,28 +633,6 @@
         getHead : function()
         {
             return document.getElementsByTagName('head')[0] || document.documentElement
-        },
-
-        /**
-         * Global Eval
-         *
-         * @param {String} data
-         */
-        globalEval : function(data)
-        {
-            var script = document.createElement('script');
-            script.type = 'text/javascript';
-
-            // Are we using a IE-browser?
-            if (HttpLibrary.browser.msie) {
-                script.text = data;
-            } else {
-                script.appendChild(document.createTextNode(data));
-            }
-
-            var head = HttpLibrary.getHead();
-            head.appendChild( script );
-            //head.removeChild( script );
         },
 
         /**
@@ -765,25 +748,16 @@
             if (typeof(event) != 'undefined') {
 
                 if (typeof(event.type) != 'undefined') {
-
                     if (event.type == 'load') {
-
                         callback();
-                        return;
-
                     }
-
                 }
 
                 if (typeof(event.readyState) != 'undefined') {
-
                     if (event.readyState == 'complete'
                         || event.readyState == 'loaded'
                     ) {
-
                         callback();
-                        return;
-
                     }
 
                 } else if (typeof(event.currentTarget) != 'undefined') {
@@ -791,10 +765,7 @@
                     if ((event.currentTarget).readyState == 'complete'
                         || (event.currentTarget).readyState == 'loaded'
                     ) {
-
                         callback();
-                        return;
-
                     }
 
                 } else if (typeof(event.srcElement) != 'undefined') {
@@ -802,10 +773,7 @@
                     if ((event.srcElement).readyState == 'complete'
                         || (event.srcElement).readyState == 'loaded'
                     ) {
-
                         callback();
-                        return;
-
                     }
 
                 }
